@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--   
+Copyright (C) 2015 DevIntelle Consulting Service Pvt.Ltd (<http://www.devintellecs.com>).
+
+For Module Support : devintelle@gmail.com  or Skype : devintelle
+    -->
+<odoo>
+
+    <record id="res_config_settings_view_form_inherit_access_rights" model="ir.ui.view">
+        <field name="name">res.config.settings.form.inherit.access.rights</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='pos_other_devices']" position="before">
+                <setting id="pos_access_rights_res_setting" string="POS Access Rights" help="Enforce per-employee access rights for POS operations (requires Employee Login).">
+                    <field name="pos_enable_access_rights"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

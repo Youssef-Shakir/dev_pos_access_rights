@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--   
+Copyright (C) 2015 DevIntelle Consulting Service Pvt.Ltd (<http://www.devintellecs.com>).
+
+For Module Support : devintelle@gmail.com  or Skype : devintelle
+    -->
+<odoo>
+
+    <record id="hr_employee_view_form_inherit_pos_access" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.pos.access</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='hr_settings']" position="after">
+                <page name="pos_access_rights" string="POS Access Rights">
+                    <group>
+                        <group string="Discount &amp; Pricing">
+                            <field name="pos_access_discount"/>
+                            <field name="pos_access_max_discount" invisible="not pos_access_discount"/>
+                            <field name="pos_access_change_price"/>
+                            <field name="pos_access_pricelist"/>
+                            <field name="pos_access_fiscal_position"/>
+                        </group>
+                        <group string="Order Management">
+                            <field name="pos_access_delete_order"/>
+                            <field name="pos_access_delete_order_line"/>
+                            <field name="pos_access_refund"/>
+                            <field name="pos_access_reduce_quantity"/>
+                        </group>
+                        <group string="Payment">
+                            <field name="pos_access_payment"/>
+                            <field name="pos_access_create_invoice"/>
+                            <field name="pos_access_tip"/>
+                        </group>
+                        <group string="Cash &amp; Session">
+                            <field name="pos_access_cash_in_out"/>
+                            <field name="pos_access_close_session"/>
+                        </group>
+                        <group string="Customer &amp; Product">
+                            <field name="pos_access_customer"/>
+                            <field name="pos_access_create_product"/>
+                            <field name="pos_access_backend"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
