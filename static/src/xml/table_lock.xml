@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Extend FloorScreen to show lock badges on tables -->
+    <t t-name="pos_access_rights.TableLockBadge">
+        <t t-if="props.isLocked">
+            <div class="table-lock-badge">
+                <i class="fa fa-lock me-1"/>
+                <t t-esc="props.lockedBy"/>
+            </div>
+        </t>
+    </t>
+
+</templates>

@@ -11,21 +11,30 @@
 
 {
     "name": "POS Access Rights",
-    "version": "18.0.1.0",
+    "version": "18.0.1.1",
     "sequence": 1,
     "category": "Point of Sale",
-    "summary": "Granular per-employee access rights for POS operations",
+    "summary": "Granular per-employee access rights for POS operations with table locking",
     "description": """
 POS Access Rights — Granular Employee Permissions for Point of Sale
 ====================================================================
 
 Control exactly what each POS employee can and cannot do. This module adds
-**17 configurable permission fields** to every employee record, letting you
+**18 configurable permission fields** to every employee record, letting you
 build fine-grained access policies for your retail cashiers, shift managers,
 and store supervisors.
 
+Table Locking (Restaurant POS)
+------------------------------
+Prevents multiple employees from accessing the same table simultaneously:
+
+- When an employee opens a table, it becomes locked for other users
+- Locked tables display a badge showing who is using them
+- Locks auto-expire after 60 seconds of inactivity
+- Managers with "Can Override Table Locks" permission can access locked tables
+
     """,
-    "depends": ["pos_hr"],
+    "depends": ["pos_hr", "pos_restaurant"],
     "data": [
         "views/hr_employee_views.xml",
         "views/pos_config_views.xml",

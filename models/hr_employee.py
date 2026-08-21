@@ -115,6 +115,14 @@ class HrEmployeeBase(models.AbstractModel):
         help="Allow this employee to switch to the Odoo backend from POS.",
     )
 
+    # ── Table Locking ────────────────────────────────────────────────
+    pos_access_table_lock_override = fields.Boolean(
+        string="Can Override Table Locks",
+        default=False,
+        help="Allow this employee (manager) to access tables that are "
+        "currently being used by other employees.",
+    )
+
 
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
@@ -141,6 +149,7 @@ class HrEmployee(models.Model):
             "pos_access_customer",
             "pos_access_create_product",
             "pos_access_backend",
+            "pos_access_table_lock_override",
         ]
         if fields_list:
             fields_list += custom_fields

@@ -41,6 +41,9 @@ For Module Support : devintelle@gmail.com  or Skype : devintelle
                             <field name="pos_access_create_product"/>
                             <field name="pos_access_backend"/>
                         </group>
+                        <group string="Table Management">
+                            <field name="pos_access_table_lock_override"/>
+                        </group>
                     </group>
                 </page>
             </xpath>

@@ -1,0 +1,50 @@
+/* Table Lock Styles */
+
+.table-locked {
+    opacity: 0.6;
+    border: 3px dashed #dc3545 !important;
+    position: relative;
+}
+
+.table-locked::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(220, 53, 69, 0.1) 10px,
+        rgba(220, 53, 69, 0.1) 20px
+    );
+    pointer-events: none;
+}
+
+.table-lock-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.table-lock-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    color: #dc3545;
+    z-index: 5;
+    text-shadow: 0 0 3px white;
+}

@@ -12,6 +12,7 @@
 from . import hr_employee
 from . import pos_config
 from . import res_config_settings
+from . import restaurant_table
 
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
