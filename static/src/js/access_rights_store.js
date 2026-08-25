@@ -7,9 +7,85 @@ import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { SelectionPopup } from "@point_of_sale/app/utils/input_popups/selection_popup";
 import { NumberPopup } from "@point_of_sale/app/utils/input_popups/number_popup";
 import { makeAwaitable } from "@point_of_sale/app/store/make_awaitable_dialog";
+import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
 
+const CONNECTIVITY_CHECK_INTERVAL = 5000;
+const OFFLINE_OVERLAY_ID = "pos-access-rights-offline-overlay";
+
 patch(PosStore.prototype, {
+  // ── Network connection enforcement (disable offline mode) ──────
+  /**
+   * After the store is fully loaded, start polling the server if this
+   * POS config requires an always-on network connection.
+   */
+  async setup() {
+    await super.setup(...arguments);
+    this.isOffline = false;
+    if (this.config.require_network_connection) {
+      this._startConnectivityCheck();
+    }
+  },
+
+  _startConnectivityCheck() {
+    if (this._connectivityCheckInterval) {
+      clearInterval(this._connectivityCheckInterval);
+    }
+    this._checkConnectivity();
+    this._connectivityCheckInterval = setInterval(
+      () => this._checkConnectivity(),
+      CONNECTIVITY_CHECK_INTERVAL,
+    );
+  },
+
+  async _checkConnectivity() {
+    try {
+      await rpc("/web/dataset/call_kw", {
+        model: "res.lang",
+        method: "get_installed",
+        args: [],
+        kwargs: {},
+      });
+      this._setOffline(false);
+    } catch (error) {
+      this._setOffline(true);
+    }
+  },
+
+  _setOffline(offline) {
+    if (this.isOffline === offline) {
+      return;
+    }
+    this.isOffline = offline;
+    if (offline) {
+      this._showOfflineOverlay();
+    } else {
+      this._hideOfflineOverlay();
+    }
+  },
+
+  _showOfflineOverlay() {
+    if (document.getElementById(OFFLINE_OVERLAY_ID)) {
+      return;
+    }
+    const overlay = document.createElement("div");
+    overlay.id = OFFLINE_OVERLAY_ID;
+    overlay.className = "pos-access-rights-offline-overlay";
+    overlay.innerHTML =
+      '<div class="pos-access-rights-offline-overlay-message">' +
+      '<i class="fa fa-wifi fa-3x mb-3"/>' +
+      `<div>${_t("No connection to server — please wait...")}</div>` +
+      "</div>";
+    document.body.appendChild(overlay);
+  },
+
+  _hideOfflineOverlay() {
+    const overlay = document.getElementById(OFFLINE_OVERLAY_ID);
+    if (overlay) {
+      overlay.remove();
+    }
+  },
+
   // ── Helper: check if access-rights enforcement is active ──────
   _accessRightsActive() {
     return this.config.enable_access_rights && this.config.module_pos_hr;

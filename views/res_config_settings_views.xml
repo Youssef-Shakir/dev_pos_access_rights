@@ -15,6 +15,9 @@ For Module Support : devintelle@gmail.com  or Skype : devintelle
                 <setting id="pos_access_rights_res_setting" string="POS Access Rights" help="Enforce per-employee access rights for POS operations (requires Employee Login).">
                     <field name="pos_enable_access_rights"/>
                 </setting>
+                <setting id="pos_require_network_connection_res_setting" string="Require Network Connection" help="Disable POS offline mode: block the cashier from creating or sending orders while the connection to the server is lost." groups="point_of_sale.group_pos_manager">
+                    <field name="pos_require_network_connection"/>
+                </setting>
             </xpath>
         </field>
     </record>

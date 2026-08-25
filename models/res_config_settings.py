@@ -21,5 +21,11 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
     )
 
+    pos_require_network_connection = fields.Boolean(
+        string="Require Network Connection",
+        related="pos_config_id.require_network_connection",
+        readonly=False,
+    )
+
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
