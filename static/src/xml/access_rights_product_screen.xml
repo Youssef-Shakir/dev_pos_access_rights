@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Hide the Payment button when the cashier is not allowed to pay -->
+    <t t-name="pos_access_rights.ProductScreen" t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
+        <xpath expr="//ActionpadWidget" position="attributes">
+            <attribute name="showActionButton">!currentOrder?.is_empty() and pos._hasAccess('pos_access_payment')</attribute>
+        </xpath>
+    </t>
+
+</templates>

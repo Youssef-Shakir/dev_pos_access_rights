@@ -97,6 +97,13 @@ class HrEmployeeBase(models.AbstractModel):
         default=True,
         help="Allow this employee to close the POS session.",
     )
+    pos_access_open_session = fields.Boolean(
+        string="Can Open Session",
+        default=True,
+        help="Allow this employee to open a new POS session from the "
+        "backend. Checked against the employee linked to the backend "
+        "user starting the session.",
+    )
 
     # ── Customer & Product ──────────────────────────────────────────
     pos_access_customer = fields.Boolean(

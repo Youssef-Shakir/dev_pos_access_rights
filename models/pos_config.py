@@ -9,7 +9,8 @@
 ##############################################################################
 
 
-from odoo import api, fields, models
+from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 
 class PosConfig(models.Model):
@@ -27,29 +28,28 @@ class PosConfig(models.Model):
         default=True,
         help="When enabled, POS offline mode is disabled: the cashier is "
         "blocked from creating or sending orders while the connection to "
-        "the server is lost, and the maximum time without internet is "
-        "forced to 0.",
+        "the server is lost.",
     )
 
-    def _force_max_time_without_internet(self):
-        """Force max_time_without_internet to 0 on configs that require a
-        network connection, effectively disabling POS offline mode."""
-        to_force = self.filtered(
-            lambda c: c.require_network_connection and c.max_time_without_internet != 0
-        )
-        if to_force:
-            super(PosConfig, to_force).write({"max_time_without_internet": 0})
+    def _check_can_open_session(self):
+        """Deny opening a new session to backend users whose linked
+        employee is not allowed to open POS sessions."""
+        self.ensure_one()
+        if not self.enable_access_rights or not self.module_pos_hr:
+            return
+        employee = self.env.user.employee_id
+        if employee and not employee.pos_access_open_session:
+            raise UserError(
+                _(
+                    "You are not allowed to open a new session for this "
+                    "Point of Sale. Please contact your manager."
+                )
+            )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        records = super().create(vals_list)
-        records._force_max_time_without_internet()
-        return records
-
-    def write(self, vals):
-        res = super().write(vals)
-        self._force_max_time_without_internet()
-        return res
+    def open_ui(self):
+        if not self.current_session_id:
+            self._check_can_open_session()
+        return super().open_ui()
 
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

@@ -35,6 +35,7 @@ For Module Support : devintelle@gmail.com  or Skype : devintelle
                         <group string="Cash &amp; Session">
                             <field name="pos_access_cash_in_out"/>
                             <field name="pos_access_close_session"/>
+                            <field name="pos_access_open_session"/>
                         </group>
                         <group string="Customer &amp; Product">
                             <field name="pos_access_customer"/>

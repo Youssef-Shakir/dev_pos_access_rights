@@ -192,6 +192,17 @@ patch(PosStore.prototype, {
     return super.selectPricelist(pricelist);
   },
 
+  // ── Payment ──────────────────────────────────────────────────
+  async pay() {
+    if (!this._hasAccess("pos_access_payment")) {
+      this._showAccessDenied(
+        _t("You are not allowed to access the payment screen."),
+      );
+      return;
+    }
+    return super.pay();
+  },
+
   // ── Product creation ──────────────────────────────────────────
   async allowProductCreation() {
     if (!this._hasAccess("pos_access_create_product")) {
