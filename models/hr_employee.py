@@ -153,6 +153,7 @@ class HrEmployee(models.Model):
             "pos_access_tip",
             "pos_access_cash_in_out",
             "pos_access_close_session",
+            "pos_access_open_session",
             "pos_access_customer",
             "pos_access_create_product",
             "pos_access_backend",

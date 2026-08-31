@@ -47,7 +47,7 @@ patch(LoginScreen.prototype, {
         this.pos.showScreen("LoginScreen");
         this.pos._showAccessDenied(
             _t(
-                "You are not allowed to open this register. Please ask a manager to open it first."
+                "Session is not open. You are not allowed to open this register — please ask a manager to open it first."
             )
         );
     },
