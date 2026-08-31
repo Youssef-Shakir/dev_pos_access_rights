@@ -3,8 +3,15 @@
 
     <!-- Hide the Payment button when the cashier is not allowed to pay -->
     <t t-name="pos_access_rights.ProductScreen" t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
+        <!-- Desktop / regular layout: the pay button inside ActionpadWidget -->
         <xpath expr="//ActionpadWidget" position="attributes">
             <attribute name="showActionButton">!currentOrder?.is_empty() and pos._hasAccess('pos_access_payment')</attribute>
+        </xpath>
+        <!-- Small-screen layout: the standalone "Pay" button in the switch-pane
+             footer is not driven by ActionpadWidget's showActionButton prop,
+             so it needs its own guard. -->
+        <xpath expr="//button[hasclass('pay-button')]" position="attributes">
+            <attribute name="t-if">!pos.scanning and pos._hasAccess('pos_access_payment')</attribute>
         </xpath>
     </t>
 

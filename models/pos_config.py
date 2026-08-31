@@ -37,7 +37,17 @@ class PosConfig(models.Model):
         self.ensure_one()
         if not self.enable_access_rights or not self.module_pos_hr:
             return
-        employee = self.env.user.employee_id
+        # Read with sudo(): the user opening the session may not have
+        # read access to hr.employee, and a silently empty/None employee
+        # would otherwise be treated as "no restriction applies".
+        user = self.env.user.sudo()
+        employee = user.employee_id
+        if not employee:
+            # employee_id is company-dependent; fall back to a direct
+            # search in case of a multi-company mismatch.
+            employee = self.env["hr.employee"].sudo().search(
+                [("user_id", "=", user.id)], limit=1
+            )
         if employee and not employee.pos_access_open_session:
             raise UserError(
                 _(

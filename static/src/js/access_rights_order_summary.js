@@ -26,11 +26,17 @@ patch(OrderSummary.prototype, {
         }
 
         // ── Block line removal ────────────────────────────────────
+        // Lines that haven't been sent to the kitchen/preparation tool
+        // yet (not "saved"/green) are still a draft: any cashier may
+        // always remove them, regardless of table navigation or the
+        // "Can Remove Order Lines" permission. Only removing a line
+        // that was already sent requires that permission.
         if (numpadMode === "quantity" && val === "remove") {
-            if (!this.pos._hasAccess("pos_access_delete_order_line")) {
+            const alreadySent = selectedLine.saved_quantity > 0;
+            if (alreadySent && !this.pos._hasAccess("pos_access_delete_order_line")) {
                 this.dialog.add(AlertDialog, {
                     title: _t("Access Denied"),
-                    body: _t("You are not allowed to remove order lines."),
+                    body: _t("You are not allowed to remove order lines that have already been sent."),
                 });
                 return;
             }
