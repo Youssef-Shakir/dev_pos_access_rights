@@ -119,6 +119,30 @@ patch(PosStore.prototype, {
     });
   },
 
+  /**
+   * How much of this line has actually been sent to the kitchen /
+   * preparation tool, according to the order's persisted
+   * `last_order_preparation_change` snapshot.
+   *
+   * This must NOT be based on `line.uiState.hasChange` or
+   * `line.saved_quantity`: both are local-only UI state (see the
+   * "Data that are not saved in the backend" comment in core's
+   * PosOrderline) that gets reset to its default the moment the line
+   * object is reconstructed from server data — e.g. after leaving and
+   * returning to a table. `last_order_preparation_change` is a real
+   * field on pos.order, keyed by the line's (stable, persisted) uuid,
+   * so it survives that reconstruction and reliably reflects what was
+   * truly sent.
+   *
+   * @param {object} line
+   * @returns {number} quantity of this line last sent, 0 if never sent
+   */
+  _getSentQuantity(line) {
+    const order = line && line.order_id;
+    const change = order?.last_order_preparation_change?.lines?.[line.preparationKey];
+    return change ? change.quantity : 0;
+  },
+
   // ── Price control ─────────────────────────────────────────────
   cashierHasPriceControlRights() {
     const base = super.cashierHasPriceControlRights();
@@ -222,12 +246,10 @@ patch(PosStore.prototype, {
     if (this._accessRightsActive()) {
       const order = this.get_order();
       const line = order && order.get_selected_orderline();
-      // `saved_quantity` is bumped on every table/order switch (core
-      // POS uses it for its own decrease-quantity accounting) and is
-      // NOT a "sent to the kitchen" marker. `uiState.hasChange` is:
-      // it starts true and only ever flips to false once the order
-      // has actually been sent to the preparation tool(s).
-      if (line && line.uiState && line.uiState.hasChange === false) {
+      // See _getSentQuantity: neither `saved_quantity` nor
+      // `uiState.hasChange` survive a table-leave/return reliably, so
+      // the persisted preparation-change snapshot is used instead.
+      if (line && this._getSentQuantity(line) > 0) {
         return true;
       }
     }
