@@ -222,7 +222,12 @@ patch(PosStore.prototype, {
     if (this._accessRightsActive()) {
       const order = this.get_order();
       const line = order && order.get_selected_orderline();
-      if (line && line.saved_quantity > 0) {
+      // `saved_quantity` is bumped on every table/order switch (core
+      // POS uses it for its own decrease-quantity accounting) and is
+      // NOT a "sent to the kitchen" marker. `uiState.hasChange` is:
+      // it starts true and only ever flips to false once the order
+      // has actually been sent to the preparation tool(s).
+      if (line && line.uiState && line.uiState.hasChange === false) {
         return true;
       }
     }

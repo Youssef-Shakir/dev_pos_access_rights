@@ -7,6 +7,26 @@ from datetime import datetime, timedelta
 class RestaurantTable(models.Model):
     _inherit = "restaurant.table"
 
+    # ── Disable table merging ────────────────────────────────────────
+    def write(self, vals):
+        """Block the "drag a table onto another one" merge feature.
+
+        The FloorScreen implements merging purely by writing a truthy
+        `parent_id` on the dropped-on table; there is no dedicated
+        method to override on the frontend, and its exact JS drag/drop
+        implementation can vary between versions, so the write itself
+        is intercepted here instead — this is authoritative regardless
+        of which client code path triggers it. Un-linking an
+        already-merged table (`parent_id` written back to False) is
+        left untouched since that isn't "merging".
+        """
+        if vals.get("parent_id"):
+            vals = dict(vals)
+            del vals["parent_id"]
+            if not vals:
+                return True
+        return super().write(vals)
+
     # ── Table Lock Fields ────────────────────────────────────────────
     lock_user_id = fields.Many2one(
         "res.users",

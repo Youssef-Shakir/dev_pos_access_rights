@@ -35,7 +35,11 @@ class PosConfig(models.Model):
         """Deny opening a new session to backend users whose linked
         employee is not allowed to open POS sessions."""
         self.ensure_one()
-        if not self.enable_access_rights or not self.module_pos_hr:
+        # Deliberately independent of `enable_access_rights` (that toggle
+        # only controls in-session cashier restrictions): who is allowed
+        # to open the register is a separate, always-on concern as long
+        # as employee login (pos_hr) is in use.
+        if not self.module_pos_hr:
             return
         # Read with sudo(): the user opening the session may not have
         # read access to hr.employee, and a silently empty/None employee

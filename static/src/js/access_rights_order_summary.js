@@ -31,8 +31,15 @@ patch(OrderSummary.prototype, {
         // always remove them, regardless of table navigation or the
         // "Can Remove Order Lines" permission. Only removing a line
         // that was already sent requires that permission.
+        //
+        // NOTE: `saved_quantity` is NOT a "sent" marker — core POS
+        // bumps it on every table/order switch for its own unrelated
+        // decrease-quantity accounting, so a line that was simply left
+        // and revisited would look "sent" if we used it here.
+        // `uiState.hasChange` is the real signal: it starts true and
+        // only flips to false once the order has actually been sent.
         if (numpadMode === "quantity" && val === "remove") {
-            const alreadySent = selectedLine.saved_quantity > 0;
+            const alreadySent = selectedLine.uiState?.hasChange === false;
             if (alreadySent && !this.pos._hasAccess("pos_access_delete_order_line")) {
                 this.dialog.add(AlertDialog, {
                     title: _t("Access Denied"),
