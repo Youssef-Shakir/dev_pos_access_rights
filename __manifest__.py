@@ -39,6 +39,7 @@ Prevents multiple employees from accessing the same table simultaneously:
         "views/hr_employee_views.xml",
         "views/pos_config_views.xml",
         "views/res_config_settings_views.xml",
+        "views/pos_order_views.xml",
     ],
     "assets": {
         "point_of_sale._assets_pos": [

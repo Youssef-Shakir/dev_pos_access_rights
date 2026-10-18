@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pos_pos_form_cancel_reason" model="ir.ui.view">
+        <field name="name">pos.order.form.cancel.reason</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="after">
+                <page string="Cancellation" name="cancellation" invisible="state != 'cancel'">
+                    <group>
+                        <field name="cancel_by"/>
+                        <field name="cancel_date"/>
+                        <field name="cancel_reason"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_pos_order_tree_cancel_reason" model="ir.ui.view">
+        <field name="name">pos.order.list.cancel.reason</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="cancel_reason" optional="show"/>
+                <field name="cancel_by" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

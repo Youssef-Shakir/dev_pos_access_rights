@@ -8,6 +8,20 @@ import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
 import { onMounted, onWillUnmount, onPatched, useState } from "@odoo/owl";
 
+// Acquiring a table lock on a weak connection: per-attempt time limit,
+// number of attempts and pause between them.
+const LOCK_TIMEOUT_MS = 8000;
+const LOCK_ATTEMPTS = 2;
+const LOCK_RETRY_DELAY_MS = 700;
+
+function withTimeout(promise, ms) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`timed out after ${ms} ms`)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Store lock refresh interval
 let lockRefreshInterval = null;
 let currentLockedTableId = null;
@@ -79,19 +93,29 @@ patch(PosStore.prototype, {
         const employeeId = cashier ? cashier.id : null;
         const sessionId = this.session?.id || null;
 
-        try {
-            const result = await rpc("/pos_access_rights/table/lock", {
-                table_id: table.id,
-                employee_id: employeeId,
-                session_id: sessionId,
-            });
-            // Refresh lock status after acquiring
-            await this.fetchTableLockStatus();
-            return result;
-        } catch (error) {
-            console.error("[TableLock] Error acquiring lock:", error);
-            return { success: false, error: "network_error" };
+        const params = { table_id: table.id, employee_id: employeeId, session_id: sessionId };
+        // On a weak connection (tablets on Wi-Fi) a request can hang or be
+        // dropped: give each attempt a time limit and retry once before
+        // reporting a connection problem. Taking the same lock twice is
+        // harmless (same user).
+        for (let attempt = 1; attempt <= LOCK_ATTEMPTS; attempt++) {
+            try {
+                const result = await withTimeout(
+                    rpc("/pos_access_rights/table/lock", params),
+                    LOCK_TIMEOUT_MS
+                );
+                // Refresh the other tables' badges in the background: the
+                // waiter should not wait for it to open the table.
+                this.fetchTableLockStatus();
+                return result;
+            } catch (error) {
+                console.warn(`[TableLock] Lock attempt ${attempt} failed:`, error);
+                if (attempt < LOCK_ATTEMPTS) {
+                    await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_DELAY_MS));
+                }
+            }
         }
+        return { success: false, error: "network_error" };
     },
 
     /**
@@ -149,8 +173,22 @@ patch(PosStore.prototype, {
      * Override setTableFromUi to acquire lock first
      */
     async setTableFromUi(table, orderUuid) {
-        // Try to acquire lock first
-        const lockResult = await this.acquireTableLock(table);
+        // Ignore taps while a table is already opening (on a slow
+        // connection waiters tap again because nothing seems to happen).
+        if (this._tableOpening) {
+            return;
+        }
+        this._tableOpening = true;
+        // Standard POS loading overlay: shows that the table is opening and
+        // blocks further taps until it is done.
+        this.ui.block();
+        let lockResult;
+        try {
+            lockResult = await this.acquireTableLock(table);
+        } finally {
+            this.ui.unblock();
+            this._tableOpening = false;
+        }
 
         if (!lockResult.success) {
             if (lockResult.error === "locked") {
@@ -158,14 +196,20 @@ patch(PosStore.prototype, {
                     title: _t("Table Locked"),
                     body: _t("This table is currently being used by %s.", lockResult.locked_by),
                 });
-                return;
+            } else if (lockResult.error === "network_error") {
+                this.dialog.add(AlertDialog, {
+                    title: _t("Connection problem"),
+                    body: _t(
+                        "The tablet could not reach the server. Check the Wi-Fi connection and tap the table again."
+                    ),
+                });
             } else {
                 this.dialog.add(AlertDialog, {
                     title: _t("Error"),
                     body: _t("Could not access the table. Please try again."),
                 });
-                return;
             }
+            return;
         }
 
         // Start lock refresh
@@ -217,10 +261,10 @@ patch(FloorScreen.prototype, {
             await this.pos.fetchTableLockStatus();
             this.updateTableLockStyles();
 
-            // Poll every 3 seconds while on floor screen
+            // Poll every 5 seconds while on floor screen
             lockPollInterval = setInterval(async () => {
                 await this.pos.fetchTableLockStatus();
-            }, 3000);
+            }, 5000);
         });
 
         // Update lock styles whenever component re-renders (e.g., after table sync)

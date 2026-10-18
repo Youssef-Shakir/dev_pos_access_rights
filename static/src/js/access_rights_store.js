@@ -6,6 +6,7 @@ import { PosStore } from "@point_of_sale/app/store/pos_store";
 import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { SelectionPopup } from "@point_of_sale/app/utils/input_popups/selection_popup";
 import { NumberPopup } from "@point_of_sale/app/utils/input_popups/number_popup";
+import { TextInputPopup } from "@point_of_sale/app/utils/input_popups/text_input_popup";
 import { makeAwaitable } from "@point_of_sale/app/store/make_awaitable_dialog";
 import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
@@ -191,7 +192,43 @@ patch(PosStore.prototype, {
       this._showAccessDenied(_t("You are not allowed to delete orders."));
       return false;
     }
+    if (order.lines?.length && !(await this._askCancelReason(order))) {
+      return false;
+    }
     return super._onBeforeDeleteOrder(order);
+  },
+
+  /**
+   * Ask for a cancel reason and store it on the server order before core
+   * cancels it. Returns false when the user closes the popup or leaves the
+   * reason empty, which aborts the cancellation.
+   */
+  async _askCancelReason(order) {
+    const reason = await makeAwaitable(this.dialog, TextInputPopup, {
+      title: _t("Cancel Reason"),
+      placeholder: _t("Why is this order being cancelled?"),
+      rows: 3,
+    });
+    if (!reason?.trim()) {
+      return false;
+    }
+    try {
+      // Unsynced orders have no server record yet: save it first so the
+      // cancellation (and its reason) is kept.
+      if (typeof order.id !== "number") {
+        await this.syncAllOrders({ orders: [order] });
+      }
+      if (typeof order.id === "number") {
+        await this.data.call("pos.order", "set_cancel_reason", [
+          order.id,
+          reason.trim(),
+          this.get_cashier()?.name || "",
+        ]);
+      }
+    } catch (error) {
+      console.error("[AccessRights] Could not save cancel reason:", error);
+    }
+    return true;
   },
 
   // ── Partner / Customer selection ──────────────────────────────

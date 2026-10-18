@@ -141,7 +141,13 @@ class RestaurantTable(models.Model):
 
     @api.model
     def get_locks_status(self, table_ids):
-        """Get lock status for multiple tables."""
+        """Get lock status for multiple tables.
+
+        Read-only on purpose: every device polls this every few seconds, and
+        writing here (clearing expired locks) collided with locks being
+        taken at the same moment. An expired lock is simply reported as free;
+        acquire_lock/release_lock overwrite or clear it when the table is used.
+        """
         tables = self.browse(table_ids)
         result = {}
 
@@ -154,9 +160,6 @@ class RestaurantTable(models.Model):
                     "lock_employee_id": table.lock_employee_id.id if table.lock_employee_id else False,
                 }
             else:
-                # Clear expired lock
-                if table.lock_user_id and table._is_lock_expired():
-                    table._clear_lock()
                 result[table.id] = {"locked": False}
 
         return result
